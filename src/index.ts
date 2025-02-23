@@ -1,21 +1,15 @@
-import Fastify from "fastify";
+import { app } from "./app.js";
 import { config } from "./config.js";
-
-const fastify = Fastify({ logger: true });
-
-fastify.get("/ping", async (request, reply) => {
-	return "pong\n";
-});
 
 async function main() {
 	try {
-		await fastify.listen({
+		await app.listen({
 			port: config.PORT,
 			host: "0.0.0.0",
 		});
-		fastify.log.info(`Server running on http://localhost:${config.PORT}`);
+		app.log.info(`Server running on http://localhost:${config.PORT}`);
 	} catch (err) {
-		fastify.log.error(err);
+		app.log.error(err);
 		process.exit(1);
 	}
 }

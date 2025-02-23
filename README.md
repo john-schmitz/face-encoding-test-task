@@ -1,4 +1,8 @@
 # Face Encoding test task
 
 ## TODO
-- [ ] Docker support
+
+- Create session
+- update session
+- get session sumary
+- list sessions
