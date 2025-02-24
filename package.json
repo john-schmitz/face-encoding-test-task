@@ -14,10 +14,13 @@
   "devDependencies": {
     "@biomejs/biome": "1.9.4",
     "@types/node": "^22.13.5",
+    "drizzle-kit": "^0.30.4",
     "typescript": "^5.7.3"
   },
   "dependencies": {
     "@fastify/multipart": "^9.0.3",
+    "@libsql/client": "^0.14.0",
+    "drizzle-orm": "^0.39.3",
     "fastify": "^5.2.1",
     "form-data": "^4.0.2",
     "uuidv7": "^1.0.2",

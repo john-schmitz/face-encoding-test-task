@@ -1,4 +1,3 @@
-version: "3.8"
 services:
   backend:
     build: .
@@ -6,4 +5,13 @@ services:
       - "3000:3000"
     environment:
       NODE_ENV: production
+      FACE_ENCODING_ENDPOINT: http://face-encoding:8000/v1/selfie
+      DATABASE_URL: file:local.db
+    restart: always
+    depends_on:
+      - face-encoding
+  face-encoding:
+    ports:
+      - "8000:8000"
+    image: veriffdocker/face-encoding-test-task
     restart: always
