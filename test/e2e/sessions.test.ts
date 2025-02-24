@@ -28,6 +28,61 @@ async function setupTestDatabase() {
 	client.close();
 }
 
+function createTestImageBuffer() {
+	return defaultFileBuffer;
+}
+
+function createFileUpload(filename = "test-image.jpg", buffer = createTestImageBuffer()) {
+	return {
+		type: "file",
+		fieldname: "file",
+		filename,
+		encoding: "7bit",
+		mimetype: "image/jpeg",
+		buffer,
+	};
+}
+
+function createMultipartPayload(
+	files: Array<{
+		fieldName?: string;
+		filename: string;
+		buffer: Buffer;
+		contentType?: string;
+	}>,
+) {
+	const boundary = "X-TEST-BOUNDARY";
+
+	const parts: string[] = [];
+
+	files.forEach((file, index) => {
+		const fieldName = file.fieldName || `file${index + 1}`;
+		const contentType = file.contentType || "image/jpeg";
+
+		parts.push(`--${boundary}`);
+		parts.push(`Content-Disposition: form-data; name="${fieldName}"; filename="${file.filename}"`);
+		parts.push(`Content-Type: ${contentType}`);
+		parts.push("");
+		parts.push(file.buffer.toString("binary"));
+	});
+
+	parts.push(`--${boundary}--`);
+
+	const payloadString = parts.join("\r\n");
+
+	return {
+		payload: Buffer.from(payloadString, "binary"),
+		headers: {
+			"content-type": `multipart/form-data; boundary=${boundary}`,
+		},
+	};
+}
+
+const defaultFileBuffer = Buffer.from(
+	"R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7",
+	"base64",
+);
+
 describe("Sessions API", () => {
 	beforeEach(async () => {
 		fastify = buildApp();
@@ -85,49 +140,38 @@ describe("Sessions API", () => {
 		});
 
 		it("should create and then list multiple sessions for a user", async () => {
-			const dummyImageBuffer = Buffer.from(
-				"R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7",
-				"base64",
-			);
-			const boundary = "X-TEST-BOUNDARY";
-			const fileContent = dummyImageBuffer.toString("binary");
+			const upload1 = createMultipartPayload([
+				{
+					filename: "image1.jpg",
+					buffer: defaultFileBuffer,
+				},
+			]);
 
-			const payload1 = [
-				`--${boundary}`,
-				'Content-Disposition: form-data; name="file"; filename="test-image1.jpg"',
-				"Content-Type: image/jpeg",
-				"",
-				fileContent,
-				`--${boundary}--`,
-			].join("\r\n");
+			const upload2 = createMultipartPayload([
+				{
+					filename: "image2.jpg",
+					buffer: defaultFileBuffer,
+				},
+			]);
 
 			await fastify.inject({
 				method: "POST",
 				url: "/v1/api/sessions",
 				headers: {
+					...upload1.headers,
 					userid: userId,
-					"content-type": `multipart/form-data; boundary=${boundary}`,
 				},
-				payload: Buffer.from(payload1, "binary"),
+				payload: upload1.payload,
 			});
 
-			const payload2 = [
-				`--${boundary}`,
-				'Content-Disposition: form-data; name="file"; filename="test-image2.jpg"',
-				"Content-Type: image/jpeg",
-				"",
-				fileContent,
-				`--${boundary}--`,
-			].join("\r\n");
-
 			await fastify.inject({
 				method: "POST",
 				url: "/v1/api/sessions",
 				headers: {
+					...upload2.headers,
 					userid: userId,
-					"content-type": `multipart/form-data; boundary=${boundary}`,
 				},
-				payload: Buffer.from(payload2, "binary"),
+				payload: upload2.payload,
 			});
 
 			const listResponse = await fastify.inject({
@@ -150,55 +194,45 @@ describe("Sessions API", () => {
 
 			expect(sessions[0].sumary).toBeInstanceOf(Array);
 			expect(sessions[1].sumary).toBeInstanceOf(Array);
-			expect(sessions[0].sumary[0].fileName).toBe("test-image2.jpg");
-			expect(sessions[1].sumary[0].fileName).toBe("test-image1.jpg");
+			expect(sessions[0].sumary[0].fileName).toBe("image2.jpg");
+			expect(sessions[1].sumary[0].fileName).toBe("image1.jpg");
 		});
 
 		it("should maintain isolation between different users' sessions", async () => {
 			const user2 = "isolation-test-user-2";
-			const dummyImageBuffer = Buffer.from(
-				"R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7",
-				"base64",
-			);
-			const boundary = "X-TEST-BOUNDARY";
-			const fileContent = dummyImageBuffer.toString("binary");
 
-			const payload1 = [
-				`--${boundary}`,
-				'Content-Disposition: form-data; name="file"; filename="user1-image.jpg"',
-				"Content-Type: image/jpeg",
-				"",
-				fileContent,
-				`--${boundary}--`,
-			].join("\r\n");
+			const upload1 = createMultipartPayload([
+				{
+					filename: "user1-image.jpg",
+					buffer: defaultFileBuffer,
+				},
+			]);
+
+			const upload2 = createMultipartPayload([
+				{
+					filename: "user2-image.jpg",
+					buffer: defaultFileBuffer,
+				},
+			]);
 
 			await fastify.inject({
 				method: "POST",
 				url: "/v1/api/sessions",
 				headers: {
+					...upload1.headers,
 					userid: userId,
-					"content-type": `multipart/form-data; boundary=${boundary}`,
 				},
-				payload: Buffer.from(payload1, "binary"),
+				payload: upload1.payload,
 			});
 
-			const payload2 = [
-				`--${boundary}`,
-				'Content-Disposition: form-data; name="file"; filename="user2-image.jpg"',
-				"Content-Type: image/jpeg",
-				"",
-				fileContent,
-				`--${boundary}--`,
-			].join("\r\n");
-
 			await fastify.inject({
 				method: "POST",
 				url: "/v1/api/sessions",
 				headers: {
+					...upload2.headers,
 					userid: user2,
-					"content-type": `multipart/form-data; boundary=${boundary}`,
 				},
-				payload: Buffer.from(payload2, "binary"),
+				payload: upload2.payload,
 			});
 
 			const user1Response = await fastify.inject({
@@ -231,48 +265,39 @@ describe("Sessions API", () => {
 
 	describe("POST /v1/api/sessions", () => {
 		it("should create a new session with valid images", async () => {
-			const dummyImageBuffer = Buffer.from(
-				"R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7",
-				"base64",
-			);
-
-			const boundary = "X-TEST-BOUNDARY";
-			const fileContent = dummyImageBuffer.toString("binary");
-
-			const payload = [
-				`--${boundary}`,
-				'Content-Disposition: form-data; name="file"; filename="test-image.jpg"',
-				"Content-Type: image/jpeg",
-				"",
-				fileContent,
-				`--${boundary}--`,
-			].join("\r\n");
+			const files = [
+				{
+					filename: "image.jpg",
+					buffer: defaultFileBuffer,
+				},
+			];
+			const { payload, headers } = createMultipartPayload(files);
 
 			const response = await fastify.inject({
 				method: "POST",
 				url: "/v1/api/sessions",
 				headers: {
-					userid: "test-user-123",
-					"content-type": `multipart/form-data; boundary=${boundary}`,
+					...headers,
+					userid: userId,
 				},
-				payload: Buffer.from(payload, "binary"),
+				payload: payload,
 			});
 
 			expect(response.statusCode).toBe(200);
 			const body = JSON.parse(response.payload);
 			expect(body).toBeDefined();
 			expect(body.id).toBeDefined();
-			expect(body.userId).toBe("test-user-123");
+			expect(body.userId).toBe(userId);
 			expect(body.sumary).toBeInstanceOf(Array);
 			expect(body.sumary.length).toBe(1);
-			expect(body.sumary[0].fileName).toBe("test-image.jpg");
+			expect(body.sumary[0].fileName).toBe(files[0]?.filename);
 			expect(body.sumary[0].faces).toBeInstanceOf(Array);
 
 			const listResponse = await fastify.inject({
 				method: "GET",
 				url: "/v1/api/sessions",
 				headers: {
-					userid: "test-user-123",
+					userid: userId,
 				},
 			});
 
@@ -282,25 +307,21 @@ describe("Sessions API", () => {
 		});
 
 		it("should return 401 when userid header is missing", async () => {
-			const dummyImageBuffer = Buffer.from(
-				"R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7",
-				"base64",
-			);
+			const files = [
+				{
+					filename: "image.jpg",
+					buffer: defaultFileBuffer,
+				},
+			];
+			const { payload, headers } = createMultipartPayload(files);
 
 			const response = await fastify.inject({
 				method: "POST",
 				url: "/v1/api/sessions",
 				headers: {
-					"content-type": "multipart/form-data",
+					...headers,
 				},
-				payload: {
-					file: {
-						type: "file",
-						filename: "test-image.jpg",
-						encoding: "7bit",
-						buffer: dummyImageBuffer,
-					},
-				},
+				payload: payload,
 			});
 
 			expect(response.statusCode).toBe(401);
@@ -309,36 +330,26 @@ describe("Sessions API", () => {
 		});
 
 		it("should handle multiple files upload", async () => {
-			const dummyImageBuffer = Buffer.from(
-				"R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7",
-				"base64",
-			);
-
-			const boundary = "X-TEST-BOUNDARY";
-			const fileContent = dummyImageBuffer.toString("binary");
-
-			const payload = [
-				`--${boundary}`,
-				'Content-Disposition: form-data; name="file1"; filename="test-image1.jpg"',
-				"Content-Type: image/jpeg",
-				"",
-				fileContent,
-				`--${boundary}`,
-				'Content-Disposition: form-data; name="file2"; filename="test-image2.jpg"',
-				"Content-Type: image/jpeg",
-				"",
-				fileContent,
-				`--${boundary}--`,
-			].join("\r\n");
+			const files = [
+				{
+					filename: "file1",
+					buffer: defaultFileBuffer,
+				},
+				{
+					filename: "file2",
+					buffer: defaultFileBuffer,
+				},
+			];
+			const { payload, headers } = createMultipartPayload(files);
 
 			const response = await fastify.inject({
 				method: "POST",
 				url: "/v1/api/sessions",
 				headers: {
-					userid: "test-user-123",
-					"content-type": `multipart/form-data; boundary=${boundary}`,
+					...headers,
+					userid: userId,
 				},
-				payload: Buffer.from(payload, "binary"),
+				payload: payload,
 			});
 
 			expect(response.statusCode).toBe(200);
