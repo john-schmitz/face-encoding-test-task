@@ -1,4 +1,5 @@
 import type { FastifyInstance, FastifyPluginOptions } from "fastify";
+import { z } from "zod";
 import SessionsController from "./sessions.controller.js";
 
 export const sessionRoutes = (
@@ -7,6 +8,8 @@ export const sessionRoutes = (
 	done: () => void,
 ) => {
 	fastify.get("/", SessionsController.listSessions);
+
 	fastify.post("/", SessionsController.createSession);
+
 	done();
 };

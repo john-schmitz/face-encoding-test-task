@@ -1,4 +1,4 @@
-import { eq, sql } from "drizzle-orm";
+import { asc, desc, eq, sql } from "drizzle-orm";
 import { db } from "../../database/db.js";
 import { sessions } from "../../database/schema.js";
 
@@ -53,7 +53,8 @@ export class SessionsRepository {
 			.from(sessions)
 			.where(eq(sessions.userId, userId))
 			.limit(validLimit)
-			.offset(offset);
+			.offset(offset)
+			.orderBy(desc(sessions.id));
 
 		const totalItems = result.at(0)?.count ?? 0;
 		const totalPages = Math.ceil(totalItems / validLimit);

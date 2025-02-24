@@ -1,3 +1,8 @@
+import { uuidv7 } from "uuidv7";
+import { z } from "zod";
+import { config } from "../../config.js";
+import type { SessionsRepository } from "./sessions.repository.js";
+
 export interface RawFile {
 	filename: string;
 	contentType: string;
@@ -7,23 +12,19 @@ export interface RawFile {
 
 export interface FileProcessResult {
 	fileName: string;
-	faces?: number[][];
-	error?: string;
+	faces: number[][];
 }
-
-import { uuidv7 } from "uuidv7";
-import { z } from "zod";
-import { config } from "../../config.js";
-import type { SessionsRepository } from "./sessions.repository.js";
 
 export class SessionsService {
 	constructor(private readonly repo: SessionsRepository) {}
 
-	async listSessions(userId: string) {
-		const result = this.repo.listSessions(userId);
+	public async listSessions(userId: string) {
+		const result = await this.repo.listSessions(userId);
+
+		return result;
 	}
 
-	async createSession(files: RawFile[]) {
+	async createSession(userId: string, files: RawFile[]) {
 		const filesPromises: Promise<FileProcessResult>[] = files.map((file) =>
 			this.processFile(file),
 		);
@@ -31,27 +32,22 @@ export class SessionsService {
 		const results = await Promise.all(filesPromises);
 		const session = {
 			id: uuidv7(),
-			userId: "temp_user",
-			faces: results,
+			userId,
+			sumary: results,
 		};
 
+		console.log(session);
 		await this.repo.createSession(session);
 
 		return session;
 	}
 
 	private async processFile(file: RawFile): Promise<FileProcessResult> {
-		try {
-			const faces = await sendMultipartRequest(
-				config.FACE_ENCODING_ENDPOINT,
-				file,
-			);
-			return { fileName: file.filename, faces: faces };
-		} catch (error) {
-			if (!(error instanceof Error)) throw new Error("Please throw a error");
-			console.error(`Error processing file ${file.filename}:`, error);
-			return { fileName: file.filename, error: error.message };
-		}
+		const faces = await sendMultipartRequest(
+			config.FACE_ENCODING_ENDPOINT,
+			file,
+		);
+		return { fileName: file.filename, faces: faces };
 	}
 }
 

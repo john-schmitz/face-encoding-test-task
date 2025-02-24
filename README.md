@@ -1,13 +1,9 @@
 # Face Encoding test task
 
+This service enables users to start a face encoding session and add up to five different photos, and get a session sumary.
 
-# The solution
-
-For our data persistent storage I chose to go with sqlite, for our table schema I chose to NOT normalize the sumary data into more tables.
 
 ## TODO
-
-- Create session
-- update session
-- get session sumary
-- list sessions
+- [ ] Swagger integration
+    - [ ] Upload photos
+    - [ ] List sessions
