@@ -1,9 +1,9 @@
-import { createClient, type Client } from "@libsql/client";
+import { randomUUID } from "node:crypto";
+import { type Client, createClient } from "@libsql/client";
 import { drizzle } from "drizzle-orm/libsql";
 import { migrate } from "drizzle-orm/libsql/migrator";
 import { buildApp } from "../../src/app.js";
 import { config } from "../../src/config.js";
-import { randomUUID } from "node:crypto";
 import { sessions } from "../../src/database/schema.js";
 
 let fastify = buildApp();
@@ -67,7 +67,7 @@ describe("Sessions API", () => {
 			const body = JSON.parse(response.payload);
 			expect(body).toBeDefined();
 			expect(body.data).toBeInstanceOf(Array);
-			expect(body.data.length).toBe(0); // Should be empty initially
+			expect(body.data.length).toBe(0);
 			expect(body.metadata).toBeDefined();
 			expect(body.metadata.currentPage).toBe(1);
 			expect(body.metadata.totalItems).toBe(0);
@@ -92,7 +92,6 @@ describe("Sessions API", () => {
 			const boundary = "X-TEST-BOUNDARY";
 			const fileContent = dummyImageBuffer.toString("binary");
 
-			// Create first session
 			const payload1 = [
 				`--${boundary}`,
 				'Content-Disposition: form-data; name="file"; filename="test-image1.jpg"',
@@ -112,7 +111,6 @@ describe("Sessions API", () => {
 				payload: Buffer.from(payload1, "binary"),
 			});
 
-			// Create second session
 			const payload2 = [
 				`--${boundary}`,
 				'Content-Disposition: form-data; name="file"; filename="test-image2.jpg"',
@@ -132,7 +130,6 @@ describe("Sessions API", () => {
 				payload: Buffer.from(payload2, "binary"),
 			});
 
-			// Now list the sessions
 			const listResponse = await fastify.inject({
 				method: "GET",
 				url: "/v1/api/sessions",
@@ -144,18 +141,16 @@ describe("Sessions API", () => {
 			expect(listResponse.statusCode).toBe(200);
 			const body = JSON.parse(listResponse.payload);
 			expect(body.data).toBeInstanceOf(Array);
-			expect(body.data.length).toBe(2); // Should have 2 sessions now
+			expect(body.data.length).toBe(2);
 			expect(body.metadata.totalItems).toBe(2);
 
-			// Verify the session data
 			const sessions = body.data;
 			expect(sessions[0].userId).toBe(userId);
 			expect(sessions[1].userId).toBe(userId);
 
-			// Verify the session summaries
 			expect(sessions[0].sumary).toBeInstanceOf(Array);
 			expect(sessions[1].sumary).toBeInstanceOf(Array);
-			expect(sessions[0].sumary[0].fileName).toBe("test-image2.jpg"); // Most recent first due to DESC order
+			expect(sessions[0].sumary[0].fileName).toBe("test-image2.jpg");
 			expect(sessions[1].sumary[0].fileName).toBe("test-image1.jpg");
 		});
 
@@ -168,7 +163,6 @@ describe("Sessions API", () => {
 			const boundary = "X-TEST-BOUNDARY";
 			const fileContent = dummyImageBuffer.toString("binary");
 
-			// Create session for user1
 			const payload1 = [
 				`--${boundary}`,
 				'Content-Disposition: form-data; name="file"; filename="user1-image.jpg"',
@@ -188,7 +182,6 @@ describe("Sessions API", () => {
 				payload: Buffer.from(payload1, "binary"),
 			});
 
-			// Create session for user2
 			const payload2 = [
 				`--${boundary}`,
 				'Content-Disposition: form-data; name="file"; filename="user2-image.jpg"',
@@ -208,7 +201,6 @@ describe("Sessions API", () => {
 				payload: Buffer.from(payload2, "binary"),
 			});
 
-			// Check user1's sessions
 			const user1Response = await fastify.inject({
 				method: "GET",
 				url: "/v1/api/sessions",
