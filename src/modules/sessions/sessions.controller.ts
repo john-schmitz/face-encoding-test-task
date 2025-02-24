@@ -8,33 +8,24 @@ export class SessionsController {
 
 	listSessions = async (
 		request: FastifyRequest<{
-			Headers: { user: string };
+			Headers: { userid: string };
 		}>,
 		reply: FastifyReply,
 	) => {
-		const { user: userId } = request.headers;
+		const { userid } = request.headers;
 
-		if (!userId || typeof userId !== "string") {
-			throw new Error("user id not provided");
-		}
-		request.log.info({ userId });
-		const result = await this.sessionsService.listSessions(userId);
-
-		request.log.info({ result });
+		const result = await this.sessionsService.listSessions(userid);
 
 		return reply.send(result);
 	};
 
 	createSession = async (
 		request: FastifyRequest<{
-			Headers: { user: string };
+			Headers: { userid: string };
 		}>,
 		reply: FastifyReply,
 	) => {
-		const { user: userId } = request.headers;
-		if (!userId || typeof userId !== "string") {
-			throw new Error("user id not provided");
-		}
+		const { userid } = request.headers;
 
 		const files: RawFile[] = [];
 
@@ -55,12 +46,10 @@ export class SessionsController {
 			files.push(rawFile);
 		}
 
-		const result = await this.sessionsService.createSession(userId, files);
+		const result = await this.sessionsService.createSession(userid, files);
 
 		return reply.send(result);
 	};
 }
 
-export default new SessionsController(
-	new SessionsService(new SessionsRepository()),
-);
+export default new SessionsController(new SessionsService(new SessionsRepository()));

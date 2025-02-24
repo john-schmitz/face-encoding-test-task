@@ -25,9 +25,7 @@ export class SessionsService {
 	}
 
 	async createSession(userId: string, files: RawFile[]) {
-		const filesPromises: Promise<FileProcessResult>[] = files.map((file) =>
-			this.processFile(file),
-		);
+		const filesPromises: Promise<FileProcessResult>[] = files.map((file) => this.processFile(file));
 
 		const results = await Promise.all(filesPromises);
 		const session = {
@@ -36,17 +34,13 @@ export class SessionsService {
 			sumary: results,
 		};
 
-		console.log(session);
 		await this.repo.createSession(session);
 
 		return session;
 	}
 
 	private async processFile(file: RawFile): Promise<FileProcessResult> {
-		const faces = await sendMultipartRequest(
-			config.FACE_ENCODING_ENDPOINT,
-			file,
-		);
+		const faces = await sendMultipartRequest(config.FACE_ENCODING_ENDPOINT, file);
 		return { fileName: file.filename, faces: faces };
 	}
 }

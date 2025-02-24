@@ -26,11 +26,7 @@ export class SessionsRepository {
 	}
 
 	async getSessionById(id: string): Promise<Session | undefined> {
-		const result = await db
-			.select()
-			.from(sessions)
-			.where(eq(sessions.id, id))
-			.limit(1);
+		const result = await db.select().from(sessions).where(eq(sessions.id, id)).limit(1);
 
 		return result[0];
 	}
@@ -70,10 +66,7 @@ export class SessionsRepository {
 		};
 	}
 
-	async updateSession(
-		id: string,
-		data: Partial<Omit<CreateSession, "id">>,
-	): Promise<void> {
+	async updateSession(id: string, data: Partial<Omit<CreateSession, "id">>): Promise<void> {
 		await db.update(sessions).set(data).where(eq(sessions.id, id));
 	}
 
