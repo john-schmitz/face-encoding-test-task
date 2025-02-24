@@ -1,4 +1,5 @@
 import type { FastifyReply, FastifyRequest } from "fastify";
+import { FaceEncodingService } from "../face-encoding/face-encoding.service.js";
 import { SessionsRepository } from "./sessions.repository.js";
 import { SessionsService } from "./sessions.service.js";
 import type { RawFile } from "./sessions.service.js";
@@ -52,4 +53,6 @@ export class SessionsController {
 	};
 }
 
-export default new SessionsController(new SessionsService(new SessionsRepository()));
+export default new SessionsController(
+	new SessionsService(new SessionsRepository(), new FaceEncodingService()),
+);

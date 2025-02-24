@@ -28,21 +28,6 @@ async function setupTestDatabase() {
 	client.close();
 }
 
-function createTestImageBuffer() {
-	return defaultFileBuffer;
-}
-
-function createFileUpload(filename = "test-image.jpg", buffer = createTestImageBuffer()) {
-	return {
-		type: "file",
-		fieldname: "file",
-		filename,
-		encoding: "7bit",
-		mimetype: "image/jpeg",
-		buffer,
-	};
-}
-
 function createMultipartPayload(
 	files: Array<{
 		fieldName?: string;
