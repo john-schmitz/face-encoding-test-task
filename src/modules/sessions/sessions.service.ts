@@ -1,7 +1,7 @@
 import { inject, injectable } from "tsyringe";
 import { uuidv7 } from "uuidv7";
 import { FaceEncodingService } from "../face-encoding/face-encoding.service.js";
-import { SessionsRepository } from "./sessions.repository.js";
+import { SessionsRepository, type PaginationParams } from "./sessions.repository.js";
 
 export interface RawFile {
 	filename: string;
@@ -22,9 +22,8 @@ export class SessionsService {
 		@inject(FaceEncodingService) private readonly faceEncodingService: FaceEncodingService,
 	) {}
 
-	public async listSessions(userId: string) {
-		const result = await this.repo.listSessions(userId);
-
+	public async listSessions(userId: string, pagination?: PaginationParams) {
+		const result = await this.repo.listSessions(userId, pagination);
 		return result;
 	}
 

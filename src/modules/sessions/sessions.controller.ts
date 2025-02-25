@@ -10,12 +10,19 @@ export class SessionsController {
 	listSessions = async (
 		request: FastifyRequest<{
 			Headers: { userid: string };
+			Querystring: { page?: number; limit?: number };
 		}>,
 		reply: FastifyReply,
 	) => {
 		const { userid } = request.headers;
+		const { page, limit } = request.query;
 
-		const result = await this.sessionsService.listSessions(userid);
+		const pagination = {
+			page: page ? Number(page) : undefined,
+			limit: limit ? Number(limit) : undefined,
+		};
+
+		const result = await this.sessionsService.listSessions(userid, pagination);
 
 		return reply.send(result);
 	};
