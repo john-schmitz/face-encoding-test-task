@@ -28,6 +28,16 @@ export class SessionsService {
 		return result;
 	}
 
+	public async getSessionById(id: string, userId: string) {
+		const session = await this.repo.getSessionById(id);
+
+		if (!session || session.userId !== userId) {
+			return null;
+		}
+
+		return session;
+	}
+
 	async createSession(userId: string, files: RawFile[]) {
 		const filesPromises: Promise<FileProcessResult>[] = files.map((file) => this.processFile(file));
 		const results = await Promise.all(filesPromises);

@@ -11,6 +11,7 @@ export const sessionRoutes = (
 	const sessionsController = container.resolve(SessionsController);
 
 	fastify.get("/", { preHandler: [userMiddleware] }, sessionsController.listSessions);
+	fastify.get("/:id", { preHandler: [userMiddleware] }, sessionsController.getSessionById);
 	fastify.post("/", { preHandler: [userMiddleware] }, sessionsController.createSession);
 
 	done();

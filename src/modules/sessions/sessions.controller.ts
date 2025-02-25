@@ -20,6 +20,25 @@ export class SessionsController {
 		return reply.send(result);
 	};
 
+	getSessionById = async (
+		request: FastifyRequest<{
+			Headers: { userid: string };
+			Params: { id: string };
+		}>,
+		reply: FastifyReply,
+	) => {
+		const { userid } = request.headers;
+		const { id } = request.params;
+
+		const session = await this.sessionsService.getSessionById(id, userid);
+
+		if (!session) {
+			return reply.status(404).send({ error: "Session not found" });
+		}
+
+		return reply.send(session);
+	};
+
 	createSession = async (
 		request: FastifyRequest<{
 			Headers: { userid: string };

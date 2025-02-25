@@ -302,4 +302,104 @@ describe("Sessions API", () => {
 			expect(body.sumary.length).toBe(2);
 		});
 	});
+
+	describe("GET /v1/api/sessions/:id", () => {
+		it("should return a session by ID", async () => {
+			const files = [
+				{
+					filename: "test-image.jpg",
+					buffer: defaultFileBuffer,
+				},
+			];
+			const { payload: createPayload, headers } = createMultipartPayload(files);
+
+			const createResponse = await fastify.inject({
+				method: "POST",
+				url: "/v1/api/sessions",
+				headers: {
+					...headers,
+					userid: userId,
+				},
+				payload: createPayload,
+			});
+
+			const createdSession = JSON.parse(createResponse.payload);
+			const sessionId = createdSession.id;
+
+			const getResponse = await fastify.inject({
+				method: "GET",
+				url: `/v1/api/sessions/${sessionId}`,
+				headers: {
+					userid: userId,
+				},
+			});
+
+			expect(getResponse.statusCode).toBe(200);
+			const session = JSON.parse(getResponse.payload);
+			expect(session).toBeDefined();
+			expect(session.id).toBe(sessionId);
+			expect(session.userId).toBe(userId);
+			expect(session.sumary).toBeInstanceOf(Array);
+			expect(session.sumary[0].fileName).toBe(files[0]?.filename);
+		});
+
+		it("should return 404 for non-existent session", async () => {
+			const response = await fastify.inject({
+				method: "GET",
+				url: "/v1/api/sessions/non-existent-id",
+				headers: {
+					userid: userId,
+				},
+			});
+
+			expect(response.statusCode).toBe(404);
+			const body = JSON.parse(response.payload);
+			expect(body.error).toBe("Session not found");
+		});
+
+		it("should return 404 when trying to access another user's session", async () => {
+			const files = [
+				{
+					filename: "user1-image.jpg",
+					buffer: defaultFileBuffer,
+				},
+			];
+			const { payload: createPayload, headers } = createMultipartPayload(files);
+
+			const createResponse = await fastify.inject({
+				method: "POST",
+				url: "/v1/api/sessions",
+				headers: {
+					...headers,
+					userid: userId,
+				},
+				payload: createPayload,
+			});
+
+			const createdSession = JSON.parse(createResponse.payload);
+			const sessionId = createdSession.id;
+
+			const user2 = "different-user";
+			const getResponse = await fastify.inject({
+				method: "GET",
+				url: `/v1/api/sessions/${sessionId}`,
+				headers: {
+					userid: user2,
+				},
+			});
+
+			expect(getResponse.statusCode).toBe(404);
+		});
+
+		it("should return 401 when userid header is missing", async () => {
+			const response = await fastify.inject({
+				method: "GET",
+				url: "/v1/api/sessions/some-id",
+			});
+
+			expect(response.statusCode).toBe(401);
+			const body = JSON.parse(response.payload);
+			expect(body.error).toBe("Invalid userid");
+		});
+	});
 });
