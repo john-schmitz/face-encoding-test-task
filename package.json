@@ -9,8 +9,8 @@
 		"build": "npx tsc",
 		"start": "node --env-file .env dist/src/index.js",
 		"watch": "npx tsx --watch --env-file .env src/index.ts",
-		"db:generate": "drizzle-kit generate",
-		"db:migrate": "drizzle-kit migrate"
+		"db:generate": "mkdir -p data && drizzle-kit generate",
+		"db:migrate": "mkdir -p data && drizzle-kit migrate"
 	},
 	"author": "John",
 	"license": "ISC",

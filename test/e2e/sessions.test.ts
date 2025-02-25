@@ -143,11 +143,6 @@ describe("Sessions API", () => {
 			const sessions = body.data;
 			expect(sessions[0].userId).toBe(userId);
 			expect(sessions[1].userId).toBe(userId);
-
-			expect(sessions[0].sumary).toBeInstanceOf(Array);
-			expect(sessions[1].sumary).toBeInstanceOf(Array);
-			expect(sessions[0].sumary[0].fileName).toBe("image2.jpg");
-			expect(sessions[1].sumary[0].fileName).toBe("image1.jpg");
 		});
 
 		it("should maintain isolation between different users' sessions", async () => {
@@ -198,7 +193,6 @@ describe("Sessions API", () => {
 			const user1Body = JSON.parse(user1Response.payload);
 			expect(user1Body.data.length).toBe(1);
 			expect(user1Body.data[0].userId).toBe(userId);
-			expect(user1Body.data[0].sumary[0].fileName).toBe("user1-image.jpg");
 
 			const user2Response = await fastify.inject({
 				method: "GET",
@@ -211,7 +205,6 @@ describe("Sessions API", () => {
 			const user2Body = JSON.parse(user2Response.payload);
 			expect(user2Body.data.length).toBe(1);
 			expect(user2Body.data[0].userId).toBe(user2);
-			expect(user2Body.data[0].sumary[0].fileName).toBe("user2-image.jpg");
 		});
 	});
 

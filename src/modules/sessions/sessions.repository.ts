@@ -11,16 +11,6 @@ export interface PaginationParams {
 	limit?: number;
 }
 
-export interface PaginatedResult<T> {
-	data: T[];
-	metadata: {
-		currentPage: number;
-		totalPages: number;
-		totalItems: number;
-		itemsPerPage: number;
-	};
-}
-
 @injectable()
 export class SessionsRepository {
 	constructor(@inject("Db") private readonly db: Db) {}
@@ -35,10 +25,7 @@ export class SessionsRepository {
 		return result[0];
 	}
 
-	async listSessions(
-		userId: string,
-		{ page = 1, limit = 10 }: PaginationParams = {},
-	): Promise<PaginatedResult<Session>> {
+	async listSessions(userId: string, { page = 1, limit = 10 }: PaginationParams = {}) {
 		const validPage = Math.max(1, page);
 		const validLimit = Math.max(1, Math.min(100, limit));
 		const offset = (validPage - 1) * validLimit;
@@ -49,7 +36,10 @@ export class SessionsRepository {
 			.where(eq(sessions.userId, userId));
 
 		const data = await this.db
-			.select()
+			.select({
+				id: sessions.id,
+				userId: sessions.userId,
+			})
 			.from(sessions)
 			.where(eq(sessions.userId, userId))
 			.limit(validLimit)

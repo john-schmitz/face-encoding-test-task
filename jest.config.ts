@@ -1,4 +1,5 @@
 const config = {
+	modulePathIgnorePatterns: ["<rootDir>/dist/"],
 	setupFilesAfterEnv: ["<rootDir>/jest.setup.ts"],
 	preset: "ts-jest",
 	testEnvironment: "node",

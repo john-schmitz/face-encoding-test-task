@@ -12,3 +12,13 @@ interact with Veriff’s services. User identification will be achieved by passi
     - [ ] List sessions
 - [ ] add userId middleware
 - It should check if you sent the userId
+
+
+## Running locally
+
+Please create a .env file with something like this:
+
+```bash
+PORT=5413
+DATABASE_URL=file:data/local.sqlite
+```

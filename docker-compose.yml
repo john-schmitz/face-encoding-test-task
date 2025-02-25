@@ -1,4 +1,11 @@
 services:
+  migration:
+    build: .
+    command: npm run db:migrate
+    environment:
+      DATABASE_URL: file:/app/data/local.sqlite
+    volumes:
+      - ./data:/app/data
   backend:
     build: .
     ports:
@@ -6,7 +13,9 @@ services:
     environment:
       NODE_ENV: production
       FACE_ENCODING_ENDPOINT: http://face-encoding:8000/v1/selfie
-      DATABASE_URL: file:local.db
+      DATABASE_URL: file:/app/data/local.sqlite
+    volumes:
+      - ./data:/app/data
     restart: always
     depends_on:
       - face-encoding
