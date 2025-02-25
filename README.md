@@ -1,30 +1,80 @@
-# Face Encoding test task
+# Face Encoding Service
 
-This service enables users to start a face encoding session and add up to five different photos, and get a session sumary.
+A microservice that enables users to create face encoding sessions, upload images, and retrieve encoding data.
+
+## Overview
+
+This service provides a REST API for managing face encoding sessions. It processes user-uploaded images (up to 5 per session), extracts facial encodings via an external service, and stores session data for later retrieval.
 
 Since we can assume that that customers are already authenticated and authorized to
-interact with Veriff’s services. User identification will be achieved by passing a `user` header to each request.
+interact with Veriff’s services. User identification will be achieved by passing a `userid` header to each request.
 
+## Technical Stack
 
-## TODO
-- [ ] Swagger integration
-    - [ ] Upload photos
-    - [ ] List sessions
-- [ ] add userId middleware
-- It should check if you sent the userId
+- **Runtime**: Node.js
+- **Language**: TypeScript
+- **Web Framework**: Fastify
+- **Database**: SQLite with Drizzle ORM
+- **Testing**: Jest
+- **API Documentation**: OpenAPI/Swagger
 
+## Development
 
-## Running locally
+### Prerequisites
 
-Please create a .env file with something like this:
+- Node.js 22+
+- npm 10+
 
-```bash
-PORT=5413
-DATABASE_URL=file:data/local.sqlite
+### Setup
+
+1. Clone the repository
+2. Create a `.env` file:
+   ```
+   PORT=5413
+   DATABASE_URL=file:data/local.sqlite
+   FACE_ENCODING_ENDPOINT=http://localhost:8000/v1/selfie
+   ```
+3. Install dependencies:
+   ```
+   npm install
+   ```
+4. Run database migrations:
+   ```
+   npm run db:migrate
+   ```
+
+### Running Locally
+
+```
+npm run watch
 ```
 
+### Testing
 
-## Swagger
+```
+npm test
+```
 
-for the sake of the simplicity of the project, I do not generate automatically the OpenAPI spec.
-But we do have a documentation page.
+## Docker Deployment
+
+The application can be deployed using Docker Compose:
+
+```
+docker-compose up -d
+```
+
+This will start:
+- The face encoding service on port 3000
+- The external face encoding processor on port 8000
+
+## API Documentation
+
+API documentation is available at `http://localhost:3000/documentation` when the service is running.
+
+### Key Endpoints
+
+- `GET /v1/api/sessions` - List user sessions
+- `POST /v1/api/sessions` - Create a new session with image uploads
+- `GET /v1/api/sessions/:id` - Get session details by ID
+
+All endpoints require a `userid` header for authentication.
