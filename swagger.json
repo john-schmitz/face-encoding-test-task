@@ -1,0 +1,358 @@
+{
+	"openapi": "3.0.0",
+	"info": {
+		"title": "Face Encoding API",
+		"description": "API for managing face encoding sessions and processing facial images",
+		"version": "1.0.0",
+		"contact": {
+			"name": "API Support"
+		}
+	},
+	"servers": [
+		{
+			"url": "http://localhost:5413",
+			"description": "Local development server"
+		},
+		{
+			"url": "http://localhost:3000",
+			"description": "Docker development server"
+		}
+	],
+	"components": {
+		"securitySchemes": {
+			"userIdHeader": {
+				"type": "apiKey",
+				"in": "header",
+				"name": "userid",
+				"description": "User ID for authentication"
+			}
+		},
+		"schemas": {
+			"Error": {
+				"type": "object",
+				"properties": {
+					"error": {
+						"type": "string",
+						"description": "Error message"
+					}
+				},
+				"required": ["error"]
+			},
+			"FileProcessResult": {
+				"type": "object",
+				"properties": {
+					"fileName": {
+						"type": "string",
+						"description": "Name of the processed file"
+					},
+					"faces": {
+						"type": "array",
+						"description": "Array of face encodings",
+						"items": {
+							"type": "array",
+							"items": {
+								"type": "number",
+								"format": "float"
+							}
+						}
+					}
+				},
+				"required": ["fileName", "faces"]
+			},
+			"Session": {
+				"type": "object",
+				"properties": {
+					"id": {
+						"type": "string",
+						"format": "uuid",
+						"description": "Unique session identifier"
+					},
+					"userId": {
+						"type": "string",
+						"description": "ID of the user who owns the session"
+					},
+					"sumary": {
+						"type": "array",
+						"description": "Summary of processed files and their face encodings",
+						"items": {
+							"$ref": "#/components/schemas/FileProcessResult"
+						}
+					}
+				},
+				"required": ["id", "userId", "sumary"]
+			},
+			"SessionListItem": {
+				"type": "object",
+				"properties": {
+					"id": {
+						"type": "string",
+						"format": "uuid",
+						"description": "Unique session identifier"
+					},
+					"userId": {
+						"type": "string",
+						"description": "ID of the user who owns the session"
+					}
+				},
+				"required": ["id", "userId"]
+			},
+			"PaginatedSessionList": {
+				"type": "object",
+				"properties": {
+					"data": {
+						"type": "array",
+						"items": {
+							"$ref": "#/components/schemas/SessionListItem"
+						}
+					},
+					"metadata": {
+						"type": "object",
+						"properties": {
+							"currentPage": {
+								"type": "integer",
+								"minimum": 1,
+								"description": "Current page number"
+							},
+							"totalPages": {
+								"type": "integer",
+								"minimum": 0,
+								"description": "Total number of pages"
+							},
+							"totalItems": {
+								"type": "integer",
+								"minimum": 0,
+								"description": "Total number of items"
+							},
+							"itemsPerPage": {
+								"type": "integer",
+								"minimum": 1,
+								"description": "Number of items per page"
+							}
+						},
+						"required": ["currentPage", "totalPages", "totalItems", "itemsPerPage"]
+					}
+				},
+				"required": ["data", "metadata"]
+			}
+		}
+	},
+	"paths": {
+		"/": {
+			"get": {
+				"summary": "Health check endpoint",
+				"description": "Returns a simple hello world message to verify the API is running",
+				"operationId": "healthCheck",
+				"responses": {
+					"200": {
+						"description": "Successful response",
+						"content": {
+							"application/json": {
+								"schema": {
+									"type": "object",
+									"properties": {
+										"hello": {
+											"type": "string",
+											"example": "world"
+										}
+									}
+								}
+							}
+						}
+					}
+				}
+			}
+		},
+		"/v1/api/sessions": {
+			"get": {
+				"summary": "List sessions",
+				"description": "Returns a paginated list of sessions for the authenticated user",
+				"operationId": "listSessions",
+				"security": [
+					{
+						"userIdHeader": []
+					}
+				],
+				"parameters": [
+					{
+						"name": "page",
+						"in": "query",
+						"description": "Page number",
+						"schema": {
+							"type": "integer",
+							"minimum": 1,
+							"default": 1
+						}
+					},
+					{
+						"name": "limit",
+						"in": "query",
+						"description": "Number of items per page",
+						"schema": {
+							"type": "integer",
+							"minimum": 1,
+							"maximum": 100,
+							"default": 10
+						}
+					}
+				],
+				"responses": {
+					"200": {
+						"description": "List of sessions",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/PaginatedSessionList"
+								}
+							}
+						}
+					},
+					"401": {
+						"description": "Unauthorized - Missing or invalid userid header",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/Error"
+								}
+							}
+						}
+					}
+				}
+			},
+			"post": {
+				"summary": "Create a new session",
+				"description": "Creates a new face encoding session with the uploaded images",
+				"operationId": "createSession",
+				"security": [
+					{
+						"userIdHeader": []
+					}
+				],
+				"requestBody": {
+					"required": true,
+					"content": {
+						"multipart/form-data": {
+							"schema": {
+								"type": "object",
+								"properties": {
+									"file1": {
+										"type": "string",
+										"format": "binary",
+										"description": "Image file to process"
+									},
+									"file2": {
+										"type": "string",
+										"format": "binary",
+										"description": "Additional image file (optional)"
+									},
+									"file3": {
+										"type": "string",
+										"format": "binary",
+										"description": "Additional image file (optional)"
+									},
+									"file4": {
+										"type": "string",
+										"format": "binary",
+										"description": "Additional image file (optional)"
+									},
+									"file5": {
+										"type": "string",
+										"format": "binary",
+										"description": "Additional image file (optional)"
+									}
+								}
+							}
+						}
+					}
+				},
+				"responses": {
+					"200": {
+						"description": "Session created successfully",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/Session"
+								}
+							}
+						}
+					},
+					"400": {
+						"description": "Bad request - Invalid file format or too many files",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/Error"
+								}
+							}
+						}
+					},
+					"401": {
+						"description": "Unauthorized - Missing or invalid userid header",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/Error"
+								}
+							}
+						}
+					}
+				}
+			}
+		},
+		"/v1/api/sessions/{id}": {
+			"get": {
+				"summary": "Get session by ID",
+				"description": "Returns detailed information about a specific session",
+				"operationId": "getSessionById",
+				"security": [
+					{
+						"userIdHeader": []
+					}
+				],
+				"parameters": [
+					{
+						"name": "id",
+						"in": "path",
+						"required": true,
+						"description": "Session ID",
+						"schema": {
+							"type": "string",
+							"format": "uuid"
+						}
+					}
+				],
+				"responses": {
+					"200": {
+						"description": "Session details",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/Session"
+								}
+							}
+						}
+					},
+					"401": {
+						"description": "Unauthorized - Missing or invalid userid header",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/Error"
+								}
+							}
+						}
+					},
+					"404": {
+						"description": "Session not found or does not belong to the user",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/Error"
+								}
+							}
+						}
+					}
+				}
+			}
+		}
+	}
+}

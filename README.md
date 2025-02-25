@@ -22,3 +22,9 @@ Please create a .env file with something like this:
 PORT=5413
 DATABASE_URL=file:data/local.sqlite
 ```
+
+
+## Swagger
+
+for the sake of the simplicity of the project, I do not generate automatically the OpenAPI spec.
+But we do have a documentation page.
