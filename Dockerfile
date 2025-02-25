@@ -19,6 +19,7 @@ COPY --from=builder /app/dist ./dist
 COPY --from=builder /app/node_modules ./node_modules
 COPY --from=builder /app/drizzle ./drizzle
 COPY --from=builder /app/drizzle.config.ts ./drizzle.config.ts
+COPY --from=builder /app/swagger.json ./swagger.json
 
 ENV NODE_ENV=production
 ENV PORT=3000

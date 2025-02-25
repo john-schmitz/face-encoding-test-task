@@ -2,6 +2,31 @@
 
 A microservice that enables users to create face encoding sessions, upload images, and retrieve encoding data.
 
+## Docker
+The application can be ran using Docker Compose:
+
+```
+docker-compose up
+```
+
+This will start:
+- The face encoding service on port 3000
+- The external face encoding processor on port 8000
+
+## API Documentation
+
+API documentation is available at `http://localhost:3000/documentation` when the service is running.
+
+***PLEASE MAKE SURE TO SELECT THE RIGHT SERVER***
+
+### Key Endpoints
+
+- `GET /v1/api/sessions` - List user sessions
+- `POST /v1/api/sessions` - Create a new session with image uploads
+- `GET /v1/api/sessions/:id` - Get session details by ID
+
+All endpoints require a `userid` header for authentication.
+
 ## Overview
 
 This service provides a REST API for managing face encoding sessions. It processes user-uploaded images (up to 5 per session), extracts facial encodings via an external service, and stores session data for later retrieval.
@@ -54,27 +79,3 @@ npm run watch
 ```
 npm test
 ```
-
-## Docker Deployment
-
-The application can be deployed using Docker Compose:
-
-```
-docker-compose up -d
-```
-
-This will start:
-- The face encoding service on port 3000
-- The external face encoding processor on port 8000
-
-## API Documentation
-
-API documentation is available at `http://localhost:3000/documentation` when the service is running.
-
-### Key Endpoints
-
-- `GET /v1/api/sessions` - List user sessions
-- `POST /v1/api/sessions` - Create a new session with image uploads
-- `GET /v1/api/sessions/:id` - Get session details by ID
-
-All endpoints require a `userid` header for authentication.
