@@ -1,11 +1,11 @@
 import type { FastifyReply, FastifyRequest } from "fastify";
-import { FaceEncodingService } from "../face-encoding/face-encoding.service.js";
-import { SessionsRepository } from "./sessions.repository.js";
+import { inject, injectable } from "tsyringe";
 import { SessionsService } from "./sessions.service.js";
 import type { RawFile } from "./sessions.service.js";
 
+@injectable()
 export class SessionsController {
-	constructor(private readonly sessionsService: SessionsService) {}
+	constructor(@inject(SessionsService) private readonly sessionsService: SessionsService) {}
 
 	listSessions = async (
 		request: FastifyRequest<{
@@ -52,7 +52,3 @@ export class SessionsController {
 		return reply.send(result);
 	};
 }
-
-export default new SessionsController(
-	new SessionsService(new SessionsRepository(), new FaceEncodingService()),
-);

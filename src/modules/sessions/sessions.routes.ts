@@ -1,14 +1,17 @@
 import type { FastifyInstance, FastifyPluginOptions } from "fastify";
+import { container } from "../../container.js";
 import { userMiddleware } from "../../middleware.js";
-import SessionsController from "./sessions.controller.js";
+import { SessionsController } from "./sessions.controller.js";
 
 export const sessionRoutes = (
 	fastify: FastifyInstance,
 	_: FastifyPluginOptions,
 	done: () => void,
 ) => {
-	fastify.get("/", { preHandler: [userMiddleware] }, SessionsController.listSessions);
-	fastify.post("/", { preHandler: [userMiddleware] }, SessionsController.createSession);
+	const sessionsController = container.resolve(SessionsController);
+
+	fastify.get("/", { preHandler: [userMiddleware] }, sessionsController.listSessions);
+	fastify.post("/", { preHandler: [userMiddleware] }, sessionsController.createSession);
 
 	done();
 };

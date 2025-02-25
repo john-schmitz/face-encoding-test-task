@@ -9,3 +9,4 @@ const configSchema = z.object({
 });
 
 export const config = configSchema.parse(process.env);
+export type Config = z.infer<typeof configSchema>;

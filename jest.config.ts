@@ -1,4 +1,5 @@
 const config = {
+	setupFilesAfterEnv: ["<rootDir>/jest.setup.ts"],
 	preset: "ts-jest",
 	testEnvironment: "node",
 	extensionsToTreatAsEsm: [".ts"],

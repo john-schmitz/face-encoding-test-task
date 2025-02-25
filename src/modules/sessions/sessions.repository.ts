@@ -1,5 +1,6 @@
-import { asc, desc, eq, sql } from "drizzle-orm";
-import { db } from "../../database/db.js";
+import { desc, eq, sql } from "drizzle-orm";
+import { inject, injectable } from "tsyringe";
+import type { Db } from "../../database/db.js";
 import { sessions } from "../../database/schema.js";
 
 export type CreateSession = typeof sessions.$inferInsert;
@@ -20,13 +21,16 @@ export interface PaginatedResult<T> {
 	};
 }
 
+@injectable()
 export class SessionsRepository {
+	constructor(@inject("Db") private readonly db: Db) {}
+
 	async createSession(session: CreateSession): Promise<void> {
-		await db.insert(sessions).values(session);
+		await this.db.insert(sessions).values(session);
 	}
 
 	async getSessionById(id: string): Promise<Session | undefined> {
-		const result = await db.select().from(sessions).where(eq(sessions.id, id)).limit(1);
+		const result = await this.db.select().from(sessions).where(eq(sessions.id, id)).limit(1);
 
 		return result[0];
 	}
@@ -39,12 +43,12 @@ export class SessionsRepository {
 		const validLimit = Math.max(1, Math.min(100, limit));
 		const offset = (validPage - 1) * validLimit;
 
-		const result = await db
+		const result = await this.db
 			.select({ count: sql<number>`count(*)` })
 			.from(sessions)
 			.where(eq(sessions.userId, userId));
 
-		const data = await db
+		const data = await this.db
 			.select()
 			.from(sessions)
 			.where(eq(sessions.userId, userId))
@@ -67,10 +71,10 @@ export class SessionsRepository {
 	}
 
 	async updateSession(id: string, data: Partial<Omit<CreateSession, "id">>): Promise<void> {
-		await db.update(sessions).set(data).where(eq(sessions.id, id));
+		await this.db.update(sessions).set(data).where(eq(sessions.id, id));
 	}
 
 	async deleteSession(id: string): Promise<void> {
-		await db.delete(sessions).where(eq(sessions.id, id));
+		await this.db.delete(sessions).where(eq(sessions.id, id));
 	}
 }

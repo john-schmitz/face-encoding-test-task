@@ -1,6 +1,8 @@
+import { injectable } from "tsyringe";
 import { z } from "zod";
 import { config } from "../../config.js";
 
+@injectable()
 export class FaceEncodingService {
 	async encodeFile(file: { buffer: Buffer; filename: string; contentType: string }) {
 		const responseSchema = z.array(z.array(z.number()).length(128));

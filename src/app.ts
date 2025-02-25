@@ -4,7 +4,6 @@ import { config } from "./config.js";
 import { sessionRoutes } from "./modules/sessions/sessions.routes.js";
 
 export function buildApp() {
-	// this function is useful for testing the web app
 	const fastify = Fastify({ logger: true });
 
 	fastify.register(multipart, {

@@ -4,12 +4,19 @@ import { drizzle } from "drizzle-orm/libsql";
 import { migrate } from "drizzle-orm/libsql/migrator";
 import { buildApp } from "../../src/app.js";
 import { config } from "../../src/config.js";
+import { container } from "../../src/container.js";
 import { sessions } from "../../src/database/schema.js";
+import { FaceEncodingService } from "../../src/modules/face-encoding/face-encoding.service.js";
+import { MockFaceEncodingService, createMultipartPayload, defaultFileBuffer } from "../utils.js";
 
 let fastify = buildApp();
 let client: Client | undefined;
 
 const userId = randomUUID();
+
+container.register(FaceEncodingService, {
+	useClass: MockFaceEncodingService,
+});
 
 async function setupTestDatabase() {
 	if (!config.DATABASE_URL.includes("test")) {
@@ -27,46 +34,6 @@ async function setupTestDatabase() {
 
 	client.close();
 }
-
-function createMultipartPayload(
-	files: Array<{
-		fieldName?: string;
-		filename: string;
-		buffer: Buffer;
-		contentType?: string;
-	}>,
-) {
-	const boundary = "X-TEST-BOUNDARY";
-
-	const parts: string[] = [];
-
-	files.forEach((file, index) => {
-		const fieldName = file.fieldName || `file${index + 1}`;
-		const contentType = file.contentType || "image/jpeg";
-
-		parts.push(`--${boundary}`);
-		parts.push(`Content-Disposition: form-data; name="${fieldName}"; filename="${file.filename}"`);
-		parts.push(`Content-Type: ${contentType}`);
-		parts.push("");
-		parts.push(file.buffer.toString("binary"));
-	});
-
-	parts.push(`--${boundary}--`);
-
-	const payloadString = parts.join("\r\n");
-
-	return {
-		payload: Buffer.from(payloadString, "binary"),
-		headers: {
-			"content-type": `multipart/form-data; boundary=${boundary}`,
-		},
-	};
-}
-
-const defaultFileBuffer = Buffer.from(
-	"R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7",
-	"base64",
-);
 
 describe("Sessions API", () => {
 	beforeEach(async () => {

@@ -1,6 +1,7 @@
+import { inject, injectable } from "tsyringe";
 import { uuidv7 } from "uuidv7";
-import type { FaceEncodingService } from "../face-encoding/face-encoding.service.js";
-import type { SessionsRepository } from "./sessions.repository.js";
+import { FaceEncodingService } from "../face-encoding/face-encoding.service.js";
+import { SessionsRepository } from "./sessions.repository.js";
 
 export interface RawFile {
 	filename: string;
@@ -14,10 +15,11 @@ export interface FileProcessResult {
 	faces: number[][];
 }
 
+@injectable()
 export class SessionsService {
 	constructor(
-		private readonly repo: SessionsRepository,
-		private readonly faceEncodingService: FaceEncodingService,
+		@inject(SessionsRepository) private readonly repo: SessionsRepository,
+		@inject(FaceEncodingService) private readonly faceEncodingService: FaceEncodingService,
 	) {}
 
 	public async listSessions(userId: string) {
